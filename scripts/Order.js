@@ -2,18 +2,28 @@ import Menu from './Menu.js';
 
 const Order = {
     cart: [],
-    load: () => {
-        if (localStorage.getItem('cm-cart')) {
+    openDB: async () => {
+        return await idb.openDB('cm-storage', 1, {
+            async upgrade(db) {
+                await db.createObjectStore('order');
+            },
+        });
+    },
+    load: async () => {
+        const db = await Order.openDB();
+        const cartString = await db.get('order', 'cart');
+        if (cartString) {
             try {
-                Order.cart = JSON.parse(localStorage.getItem('cm-cart'));
-                Order.render();
+                Order.cart = JSON.parse(cartString);
             } catch (e) {
-                localStorage.removeItem('cm-cart');
+                console.error('Data in Storage is corrupted');
             }
         }
+        Order.render();
     },
-    save: () => {
-        localStorage.setItem('cm-cart', JSON.stringify(Order.cart));
+    save: async () => {
+        const db = await Order.openDB();
+        await db.put('order', JSON.stringify(Order.cart), 'cart');
     },
     add: async (id) => {
         const product = await Menu.getProductById(id);
