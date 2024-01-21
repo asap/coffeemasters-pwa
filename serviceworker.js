@@ -22,9 +22,13 @@ self.addEventListener('install', async (event) => {
 self.addEventListener('fetch', async (event) => {
     event.respondWith(
         (async () => {
-            const cachedResponse = await caches.match(event.request);
-            if (cachedResponse) return cachedResponse;
-            return fetch(event.request);
+            try {
+                const fetchResponse = await fetch(event.request);
+                return fetchResponse;
+            } catch (e) {
+                const cachedResponse = await caches.match(event.request);
+                if (cachedResponse) return cachedResponse;
+            }
         })()
     );
 });
